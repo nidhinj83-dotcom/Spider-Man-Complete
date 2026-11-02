@@ -32,7 +32,7 @@
   .speaker { color:#ffd75e; font-weight:bold; }
   .red { color:#ff5a5a; font-weight:bold; }
   .good { color:#7be495; font-weight:bold; }
-  #btnRow { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+  #btnRow, #sceneBtnRow { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
   button.bigbtn { background:linear-gradient(180deg,#27408f,#16245c); color:#fff; border:2px solid #4f74e0;
     border-radius:12px; padding:15px 16px; font-size:clamp(16px,3vw,19px); cursor:pointer; text-align:left; font-family:inherit; }
   button.bigbtn:hover, button.bigbtn:active { background:linear-gradient(180deg,#3556bd,#1d3170); }
@@ -111,6 +111,7 @@
         <button class="bigbtn" id="venomBtn" style="margin-top:8px;">🖤 &nbsp;DLC: VENOM</button>
         <button class="bigbtn" id="rematchBtn" style="margin-top:8px;">🔥 &nbsp;FINAL REMATCH</button>
         <button class="bigbtn" id="mirrorBtn" style="margin-top:8px;">🪞 &nbsp;SECRET: THE MIRROR</button>
+        <button class="bigbtn" id="teamBtn" style="margin-top:8px;">🤝 &nbsp;TEAM BATTLES</button>
       </div>
       <p id="progStatus" style="color:#ffd83d;font-size:13.5px;margin-top:10px;"></p>
       <p id="rushBest" style="color:#ce93d8;font-size:13.5px;margin-top:2px;"></p>
@@ -136,7 +137,7 @@
       <div id="artPanel">🌆</div>
       <div id="chapterTag">CHAPTER</div>
       <div id="sceneText"></div>
-      <div id="btnRow"></div>
+      <div id="sceneBtnRow"></div>
     </div>
 
     <!-- FIGHT -->
@@ -631,7 +632,7 @@ var HANDLERS = {
     if (!PROG.venomDone) { PROG.venomDone = true; UP.pts += 4; saveUP(); savePROG(); }
     go('venom_after');
   },
-  toTitle: function(){ rushMode = false; gauntletMode = false; rematchMode = false; showBox('titleBox'); renderUps(); renderModes(); },
+  toTitle: function(){ rushMode = false; gauntletMode = false; rematchMode = false; teamMode = false; showBox('titleBox'); renderUps(); renderModes(); },
   mirrorBeaten: function(){
     if (!PROG.mirrorDone) { PROG.mirrorDone = true; UP.pts += 10; saveUP(); savePROG(); }
     go('mirror_outro');
@@ -699,7 +700,7 @@ function renderStory(sc){
   el('chapterTag').textContent = sc.chapter || '';
   var lines = sceneLines(sc);
   el('sceneText').innerHTML = lines.map(function(t){ return '<p>'+t+'</p>'; }).join('');
-  var row = el('btnRow'); row.innerHTML = '';
+  var row = el('sceneBtnRow'); row.innerHTML = '';
   if (sc.type === 'choice') {
     sc.options.forEach(function(opt, i){
       var b = document.createElement('button');
@@ -745,7 +746,7 @@ function startGame(){
   ABIL = { web:false, heal:false, super:false };
   bossWins = 0;
   thugWins = 0;
-  rushMode = false; gauntletMode = false; rematchMode = false;
+  rushMode = false; gauntletMode = false; rematchMode = false; teamMode = false;
   resetRoam();
   updateHUD();
   go('open1');
@@ -770,7 +771,7 @@ var UP = { pts:0, hp:0, hit:0, heal:0, sup:0, spd:0 };
 try { var upSv = JSON.parse(localStorage.getItem(UPKEY) || 'null'); if (upSv) { for (var uk in UP) if (typeof upSv[uk] === 'number') UP[uk] = upSv[uk]; } } catch (e) {}
 function saveUP(){ try { localStorage.setItem(UPKEY, JSON.stringify(UP)); } catch (e) {} }
 var PROGKEY = 'redAuraProgress';
-var PROG = { rushDone:false, gauntletDone:false, venomDone:false, rematchDone:false, supremeFree:false, mirrorDone:false };
+var PROG = { rushDone:false, gauntletDone:false, venomDone:false, rematchDone:false, supremeFree:false, mirrorDone:false, teamDone:false };
 try { var pgSv = JSON.parse(localStorage.getItem(PROGKEY) || 'null'); if (pgSv) { for (var pk in PROG) if (typeof pgSv[pk] === 'boolean') PROG[pk] = pgSv[pk]; } } catch (e) {}
 function savePROG(){ try { localStorage.setItem(PROGKEY, JSON.stringify(PROG)); } catch (e) {} }
 var RUSHBESTKEY = 'redAuraRushBest';
@@ -810,14 +811,20 @@ function renderModes(){
   var gb = el('gauntletBtn'); if (gb) { var gl2 = !PROG.rushDone; gb.innerHTML = gl2 ? '🔒 &nbsp;HARDEST GAUNTLET — beat Boss Rush Cycle 5' : '🔥 &nbsp;HARDEST GAUNTLET — all 10,000 HP, NO Super Mode'; gb.disabled = gl2; }
   var vb = el('venomBtn'); if (vb) { var vl = !PROG.gauntletDone; vb.innerHTML = vl ? '🔒 &nbsp;DLC: VENOM — beat the Hardest Gauntlet' : (PROG.venomDone ? '🖤 &nbsp;DLC: VENOM — fight him again!' : '🖤 &nbsp;DLC: VENOM — Miles is calling…'); vb.disabled = vl; }
   var mb = el('rematchBtn'); if (mb) { var ml2 = !PROG.venomDone; mb.innerHTML = ml2 ? '🔒 &nbsp;FINAL REMATCH — beat Venom first' : (PROG.supremeFree ? '👑 &nbsp;FINAL REMATCH — cleared! Supreme is yours' : '🔥 &nbsp;FINAL REMATCH — 10,000 HP, harder hits'); mb.disabled = ml2; }
+  var tb = el('teamBtn'); if (tb) { var tl = !PROG.mirrorDone; tb.innerHTML = tl ? '🔒 &nbsp;TEAM BATTLES — defeat the Mirror first' : (PROG.teamDone ? '🤝 &nbsp;TEAM BATTLES — conquered ✔ (again!)' : '🤝 &nbsp;TEAM BATTLES — singles, doubles, triple, ALL FOUR'); tb.disabled = tl; }
   var xb = el('mirrorBtn'); if (xb) { var xl = !PROG.supremeFree; xb.innerHTML = xl ? '🔒 &nbsp;SECRET: THE MIRROR — unlock Supreme everywhere first' : (PROG.mirrorDone ? '🪞 &nbsp;SECRET: THE MIRROR — defeated ✔ (fight again)' : '🪞 &nbsp;SECRET: THE MIRROR — Miles has a warning…'); xb.disabled = xl; }
-  var ps = el('progStatus'); if (ps) ps.textContent = [storyDone() ? '📖 Story ✔' : '📖 Story', PROG.rushDone ? '👑 Rush ✔' : '👑 Rush', PROG.gauntletDone ? '🔥 Gauntlet ✔' : '🔥 Gauntlet', PROG.venomDone ? '🖤 Venom ✔' : '🖤 Venom', PROG.supremeFree ? '👑 SUPREME EVERYWHERE' : '👑 Supreme 🔒', PROG.mirrorDone ? '🪞 Mirror ✔' : '🪞 Mirror'].join(' · ');
+  var ps = el('progStatus'); if (ps) ps.textContent = [storyDone() ? '📖 Story ✔' : '📖 Story', PROG.rushDone ? '👑 Rush ✔' : '👑 Rush', PROG.gauntletDone ? '🔥 Gauntlet ✔' : '🔥 Gauntlet', PROG.venomDone ? '🖤 Venom ✔' : '🖤 Venom', PROG.supremeFree ? '👑 SUPREME EVERYWHERE' : '👑 Supreme 🔒', PROG.mirrorDone ? '🪞 Mirror ✔' : '🪞 Mirror', PROG.teamDone ? '🤝 Team ✔' : '🤝 Team'].join(' · ');
   var rbst = el('rushBest'); if (rbst) rbst.textContent = rushBest.cycle ? ('🏆 Rush best: Cycle ' + rushBest.cycle + ', boss ' + (rushBest.step + 1) + ' of 4') : '';
 }
 function ensureRun(){ if (!S) S = newState(); ABIL.web = true; ABIL.heal = true; ABIL.super = true; }
 function startRush(){ ensureRun(); rushMode = true; gauntletMode = false; rematchMode = false; rushStep = 0; rushCycle = 1; startRushBoss(); }
 function startGauntlet(){ ensureRun(); gauntletMode = true; rushMode = false; rematchMode = false; gauntletStep = 0; startGauntletBoss(); }
 function startRematch(){ ensureRun(); rematchMode = true; rushMode = false; gauntletMode = false; rematchStep = 0; startRematchBoss(); }
+var teamMode = false, teamStep = 0;
+var TEAM_ORDER = ['kingpin', 'miles', 'lizard_super', 'mysterio', 'duo1', 'duo2', 'duo3', 'trio', 'quad'];
+var TEAM_NAMES = { kingpin:'👑 KINGPIN (solo)', miles:'⚡ MILES (solo)', lizard_super:'🦎 THE LIZARD (solo)', mysterio:'🎭 MYSTERIO (solo)', duo1:'👑+🦎 KINGPIN & LIZARD', duo2:'👑+⚡ KINGPIN & MILES', duo3:'🦎+🎭 LIZARD & MYSTERIO', trio:'👑+⚡+🦎 KINGPIN, MILES & LIZARD', quad:'👑⚡🦎🎭 ALL FOUR AT ONCE' };
+function startTeam(){ ensureRun(); teamMode = true; rushMode = false; gauntletMode = false; rematchMode = false; teamStep = 0; startTeamBoss(); }
+function startTeamBoss(){ var k = TEAM_ORDER[teamStep]; startFight({ fight:k, chapter:'🤝 TEAM BATTLES', intro:'🤝 TEAM BATTLES — Round ' + (teamStep + 1) + ' of 9: ' + TEAM_NAMES[k] + '!', next:null }); }
 function startRushBoss(){ var k = MODE_ORDER[rushStep]; startFight({ fight:k, chapter:'👑 BOSS RUSH', intro:'👑 BOSS RUSH — Cycle ' + rushCycle + ' · Boss ' + (rushStep + 1) + ' of 4: ' + MODE_NAMES[k] + '!', next:null }); }
 function startGauntletBoss(){ var k = MODE_ORDER[gauntletStep]; startFight({ fight:k, chapter:'🔥 HARDEST GAUNTLET', intro:'🔥 HARDEST — ' + MODE_NAMES[k] + ' · 10,000 HP · 🚫 NO SUPER MODE — skill and upgrades only!', next:null }); }
 function startRematchBoss(){ var k = MODE_ORDER[rematchStep]; startFight({ fight:k, chapter:'🔥 FINAL REMATCH', intro:'🔥 FINAL REMATCH — ' + MODE_NAMES[k] + ' · 10,000 HP · hitting harder than ever!', next:null }); }
@@ -838,6 +845,12 @@ function modeBossDown(mode){
     el('rushText').innerHTML = (gdone ? 'All four beaten at 10,000 HP with NO Super Mode. Peter feels a strange urge… and his phone is ringing. 📱 The Venom DLC waits on the title screen!' : MODE_NAMES[beaten] + ' falls! Next: ' + MODE_NAMES[MODE_ORDER[gauntletStep + 1]] + ' — 10,000 HP.') + '<br>⬆️ <b>+' + pts + ' Upgrade Points</b> — you have ' + UP.pts + '.';
     el('rushNextBtn').innerHTML = gdone ? '▶ &nbsp;FINISH' : '▶ &nbsp;NEXT HARDEST BOSS';
     if (gdone) { PROG.gauntletDone = true; savePROG(); gauntletMode = false; } else { gauntletStep++; }
+  } else if (mode === 'team') {
+    var tdone = teamStep === 8;
+    el('rushTitle').textContent = tdone ? '🤝 TEAM BATTLES — CONQUERED!' : '🤝 ROUND WON!';
+    el('rushText').innerHTML = (tdone ? 'Singles, doubles, the triple AND all four at once — every combination beaten. Peter stands alone at the top.' : TEAM_NAMES[beaten] + ' beaten! Next: ' + TEAM_NAMES[TEAM_ORDER[teamStep + 1]] + '.') + '<br>⬆️ <b>+' + pts + ' Upgrade Points</b> — you have ' + UP.pts + '.';
+    el('rushNextBtn').innerHTML = tdone ? '▶ &nbsp;FINISH' : '▶ &nbsp;NEXT ROUND';
+    if (tdone) { PROG.teamDone = true; savePROG(); teamMode = false; } else { teamStep++; }
   } else {
     var rdone = rematchStep === 3;
     el('rushTitle').textContent = rdone ? '👑 SUPREME MODE — UNLOCKED EVERYWHERE!' : '🔥 REMATCH BOSS DOWN!';
@@ -878,6 +891,11 @@ var FIGHTS = {
   mysterio:     { label:'🎭 MYSTERIO',     make:function(){ return [mkFoe('mysterio',620,200)]; } },
   venom:        { label:'🖤 VENOM',        make:function(){ return [mkFoe('venom',620,250)]; } },
   mirror:       { label:'🪞 THE MIRROR',   make:function(){ return [mkFoe('mirror',620,250)]; } },
+  duo1:         { label:'👑+🦎 KINGPIN & LIZARD', make:function(){ return [mkFoe('kingpin',450,200), mkFoe('lizard',700,300)]; } },
+  duo2:         { label:'👑+⚡ KINGPIN & MILES',  make:function(){ return [mkFoe('kingpin',450,250), mkFoe('miles',720,180)]; } },
+  duo3:         { label:'🦎+🎭 LIZARD & MYSTERIO', make:function(){ return [mkFoe('lizard',450,220), mkFoe('mysterio',720,260)]; } },
+  trio:         { label:'👑+⚡+🦎 TRIPLE BATTLE', make:function(){ return [mkFoe('kingpin',380,200), mkFoe('miles',620,140), mkFoe('lizard',700,330)]; } },
+  quad:         { label:'👑⚡🦎🎭 ALL FOUR',     make:function(){ return [mkFoe('kingpin',350,180), mkFoe('miles',560,120), mkFoe('lizard',720,320), mkFoe('mysterio',500,300)]; } },
   street:       { label:'🥷 STREET THUG',  make:function(){
     // Nohan's street enemies (Nov 1): strength climbs the SAME ladder as the bosses (bossWins).
     var t = bossWins, n = 1 + (t >= 2 ? 1 : 0) + (t >= 4 ? 1 : 0), out = [];
@@ -947,9 +965,13 @@ function startFight(scene){
     var rcap2 = RCAP[fightKind], rcyc2 = Math.min(rushCycle, 5);
     foes.forEach(function(f){ if (!f.fake && rcap2) { var tgt2 = Math.round(RAW[fightKind] + (rcap2 - RAW[fightKind]) * (rcyc2 - 1) / 4); f.max = tgt2; f.hp = tgt2; f.dmg = Math.round(f.dmg * (1 + 0.35 * (rcyc2 - 1))); } });
   }
+  if (teamMode) {
+    var TMUL = [{h:2,d:1.5},{h:2,d:1.5},{h:2,d:1.5},{h:2,d:1.5},{h:3,d:2},{h:3,d:2},{h:3,d:2},{h:4,d:2.5},{h:5,d:3}][teamStep] || {h:2,d:1.5};
+    foes.forEach(function(f){ if (!f.fake) { f.max = Math.round(f.max * TMUL.h); f.hp = f.max; f.dmg = Math.round(f.dmg * TMUL.d); } });
+  }
   if (fightKind === 'venom') { P.max = Math.max(P.max, 1000); P.hp = P.max; }
   if (fightKind === 'mirror') { P.max = Math.max(P.max, 60000); P.hp = P.max; } // NOHAN'S HEALTH RULE: at least 60,000 health for the Mirror duel — his punch does 50,000, so one hit is survivable, two are not
-  brawlMode = (fightKind === 'miles' && (gauntletMode || rematchMode));
+  brawlMode = ((gauntletMode || rematchMode || teamMode) && foes.some(function(f){ return f.kind === 'miles'; }));
   if (bord >= 1) { setTimeout(function(){ setMsg('⚔️ BOSS ' + bord + ' — this enemy is stronger than the last… but so is Peter! ❤️ HP ' + P.max + ' · 👊 Hit ' + (9 + P.atkBonus) + (bossWins ? ' · Bosses beaten: ' + bossWins : ''), 3.6); }, 4800); }
   projs = []; pops = []; parts = [];
   sparPhase = 0; sparTimer = 0; eruptT = -1; fightTime = 0;
@@ -967,6 +989,7 @@ function endFight(win){
     if (rushMode) { bossWins++; modeBossDown('rush'); return; }
     if (gauntletMode) { bossWins++; modeBossDown('gauntlet'); return; }
     if (rematchMode) { bossWins++; modeBossDown('rematch'); return; }
+    if (teamMode) { bossWins++; modeBossDown('team'); return; }
     if ({ kingpin:1, miles:1, lizard_clean:1, lizard_super:1, lizard_u:1, mysterio:1, venom:1 }[fightKind]) { bossWins++; UP.pts++; saveUP(); }
     go(curFightScene.next);
   }
@@ -1181,7 +1204,7 @@ function update(dt){
       if (f.shieldCd === undefined) { f.shieldCd = 6; f.summonT = 7; }
       f.shieldCd -= dt;
       if (f.shieldCd <= 0) { f.shieldCd = 12; f.shieldT = 4; setMsg('💰 KINGPIN raises his MONEY SHIELD — he cannot be hurt!', 1.6); burst(f.x, f.y, '#ffd75e', 14); }
-      if (gauntletMode || rematchMode) { f.summonT -= dt; if (f.summonT <= 0) { f.summonT = 11; var adds2 = 0; foes.forEach(function(q){ if (q.kind === 'thug' && q.hp > 0) adds2++; }); if (adds2 < 2) { var t1 = mkFoe('thug', f.x - 90, f.y + 60); t1.max = 300; t1.hp = 300; t1.dmg = 80; foes.push(t1); setMsg('🚗 KINGPIN calls his LIMO CREW!', 1.4); } } }
+      if (gauntletMode || rematchMode || teamMode) { f.summonT -= dt; if (f.summonT <= 0) { f.summonT = 11; var adds2 = 0; foes.forEach(function(q){ if (q.kind === 'thug' && q.hp > 0) adds2++; }); if (adds2 < 2) { var t1 = mkFoe('thug', f.x - 90, f.y + 60); t1.max = 300; t1.hp = 300; t1.dmg = 80; foes.push(t1); setMsg('🚗 KINGPIN calls his LIMO CREW!', 1.4); } } }
       if (f.chargeState === 0) {
         f.chargeT -= dt;
         if (f.chargeT <= 0) { f.chargeState = 1; f.stateT = 0.6; f.chargeTx = vx; f.chargeTy = vy; setMsg('⚠️ KINGPIN IS ABOUT TO CHARGE!', 0.8); }
@@ -1197,7 +1220,7 @@ function update(dt){
     } else if (f.kind === 'miles') {
       // ABILITY (Anya's design): harder Miles adds ⚡ OVERCHARGE — triple bolts.
       if (f.abilT === undefined) f.abilT = 5;
-      if (gauntletMode || rematchMode) { f.abilT -= dt; if (f.abilT <= 0) { f.abilT = 8; for (var bi = 0; bi < 3; bi++) projs.push({ x:f.x, y:f.y, speed:280 + bi * 40, from:'boss', kind:'bolt', dmg:90, life:3 }); setMsg('⚡ MILES OVERCHARGE — triple bolts!', 1.2); } }
+      if (gauntletMode || rematchMode || teamMode) { f.abilT -= dt; if (f.abilT <= 0) { f.abilT = 8; for (var bi = 0; bi < 3; bi++) projs.push({ x:f.x, y:f.y, speed:280 + bi * 40, from:'boss', kind:'bolt', dmg:90, life:3 }); setMsg('⚡ MILES OVERCHARGE — triple bolts!', 1.2); } }
       f.teleT -= dt;
       if (f.teleT <= 0) { f.teleT = 1.6 + Math.random(); var a = Math.random()*6.283; f.x = P.x + Math.cos(a)*170; f.y = P.y + Math.sin(a)*170; burst(f.x, f.y, '#b388ff', 8); }
       if (dist > 120) { f.x += vx * f.speed * slowMul * dt; f.y += vy * f.speed * slowMul * dt; }
@@ -1209,7 +1232,7 @@ function update(dt){
       if (f.regenT === undefined) { f.regenT = 5; f.spitT = 4; }
       f.regenT -= dt;
       if (f.regenT <= 0) { f.regenT = 5; if (f.hp > 0 && f.hp < f.max * 0.5) { f.hp = Math.min(f.max * 0.5, f.hp + f.max * 0.02); popup(f.x, f.y - 48, '🦎 REGENERATES!', '#a5d6a7'); } }
-      if (gauntletMode || rematchMode) { f.spitT -= dt; if (f.spitT <= 0) { f.spitT = 5; projs.push({ x:f.x, y:f.y, speed:300, from:'boss', kind:'illusion', dmg:120, life:3 }); projs.push({ x:f.x, y:f.y, speed:250, from:'boss', kind:'illusion', dmg:120, life:3 }); setMsg('🦎 ACID SPIT!', 1); } }
+      if (gauntletMode || rematchMode || teamMode) { f.spitT -= dt; if (f.spitT <= 0) { f.spitT = 5; projs.push({ x:f.x, y:f.y, speed:300, from:'boss', kind:'illusion', dmg:120, life:3 }); projs.push({ x:f.x, y:f.y, speed:250, from:'boss', kind:'illusion', dmg:120, life:3 }); setMsg('🦎 ACID SPIT!', 1); } }
       if (f.chargeState === 0) {
         f.chargeT -= dt;
         if (f.chargeT <= 0 && dist < 330) { f.chargeState = 1; f.stateT = 0.5; f.chargeTx = vx; f.chargeTy = vy; }
@@ -1225,7 +1248,7 @@ function update(dt){
     } else if (f.kind === 'mysterio') {
       // ABILITY (Anya's design): harder Mysterio adds 💨 SMOKE BOMB — he vanishes, untouchable.
       if (f.smokeT === undefined) f.smokeT = 9;
-      if (gauntletMode || rematchMode) { f.smokeT -= dt; if (f.smokeT <= 0) { f.smokeT = 11; f.hiddenT = 2.5; f.x = 120 + Math.random()*(W-240); f.y = 90 + Math.random()*(H-180); burst(f.x, f.y, '#b0bec5', 16); setMsg('💨 MYSTERIO vanishes in a SMOKE BOMB!', 1.4); } }
+      if (gauntletMode || rematchMode || teamMode) { f.smokeT -= dt; if (f.smokeT <= 0) { f.smokeT = 11; f.hiddenT = 2.5; f.x = 120 + Math.random()*(W-240); f.y = 90 + Math.random()*(H-180); burst(f.x, f.y, '#b0bec5', 16); setMsg('💨 MYSTERIO vanishes in a SMOKE BOMB!', 1.4); } }
       f.teleT -= dt;
       if (f.teleT <= 0) {
         f.teleT = 3.4;
@@ -1764,13 +1787,15 @@ document.getElementById('gauntletBtn').addEventListener('click', function(){ sta
 document.getElementById('venomBtn').addEventListener('click', function(){ ensureRun(); go('venom_urge'); });
 document.getElementById('rematchBtn').addEventListener('click', function(){ startRematch(); });
 document.getElementById('mirrorBtn').addEventListener('click', function(){ ensureRun(); go('mirror_call'); });
+document.getElementById('teamBtn').addEventListener('click', function(){ startTeam(); });
 document.getElementById('rushNextBtn').addEventListener('click', function(){
-  if (gauntletMode) startGauntletBoss();
+  if (teamMode) startTeamBoss();
+  else if (gauntletMode) startGauntletBoss();
   else if (rematchMode) startRematchBoss();
   else if (rushMode) startRushBoss();
   else { showBox('titleBox'); renderUps(); renderModes(); }
 });
-document.getElementById('rushQuitBtn').addEventListener('click', function(){ rushMode = false; gauntletMode = false; rematchMode = false; showBox('titleBox'); renderUps(); renderModes(); });
+document.getElementById('rushQuitBtn').addEventListener('click', function(){ rushMode = false; gauntletMode = false; rematchMode = false; teamMode = false; showBox('titleBox'); renderUps(); renderModes(); });
 renderUps(); renderModes();
 bindTouch();
 bindRoamTouch();
