@@ -52,7 +52,8 @@
   #superFill { height:100%; width:0%; background:linear-gradient(90deg,#ff7043,#ff1744); transition:width .15s; }
   #fightMsg { text-align:center; min-height:24px; font-size:16.5px; color:#ffd75e; padding:2px 6px; font-weight:bold; }
   canvas { display:block; width:100%; height:auto; background:#141a30; touch-action:none; }
-  #touchBtns { display:flex; justify-content:space-between; padding:8px; gap:8px; }
+  #fightBox canvas, #roamBox canvas { height:min(56vh, 600px); object-fit:contain; }
+  #touchBtns { display:flex; justify-content:space-between; padding:8px; gap:8px; position:sticky; bottom:0; background:rgba(10,14,28,.94); border-top:1px solid #2c3a5e; z-index:50; }
   .pad { display:grid; grid-template-columns:repeat(3,52px); grid-template-rows:repeat(3,52px); gap:4px; }
   .pad button, .acts button { background:#1d2547; color:#fff; border:2px solid #3c4c8c; border-radius:12px; font-size:19px; cursor:pointer; font-family:inherit; }
   .pad button:active, .acts button:active { background:#31448f; }
@@ -69,7 +70,7 @@
   #roamBox { display:none; }
   #roamHint { text-align:center; font-size:clamp(14px,2.6vw,17px); font-weight:bold; color:#ffd75e; padding:8px 8px 6px; min-height:26px; }
   #roamHelp { text-align:center; color:#8fa3d9; font-size:13px; padding:4px 8px 10px; }
-  #roamTouch { display:flex; justify-content:space-between; padding:8px; gap:8px; }
+  #roamTouch { display:flex; justify-content:space-between; padding:8px; gap:8px; position:sticky; bottom:0; background:rgba(10,14,28,.94); border-top:1px solid #2c3a5e; z-index:50; }
   @media (max-width:760px), (pointer:coarse){ #roamTouch{ display:flex; } #roamHelp{ display:none; } }
   body.touch #touchBtns { display:flex; }
   body.touch #roamTouch { display:flex; }
@@ -923,6 +924,7 @@ function mkFoe(kind, x, y){
 function startFight(scene){
   curFightScene = scene; fightKind = scene.fight;
   showBox('fightBox');
+  el('fightBox').scrollIntoView();
   cv = document.getElementById('cv'); ctx = cv.getContext('2d');
   // Boss 1 unlocks the new powers (Nohan: heal, web-up, super wake during Kingpin)
   if (fightKind === 'kingpin' && !ABIL.super) {
@@ -1569,6 +1571,7 @@ function enterRoam(sceneId){
   RP.x = roamLast.x; RP.y = roamLast.y;
   keysHeld = {}; roamSwing = false;
   showBox('roamBox');
+  el('roamBox').scrollIntoView();
   if (!rcv) { rcv = document.getElementById('rcv'); rctx = rcv.getContext('2d'); }
   el('roamHint').textContent = '🗽 Free Roam — next: ' + ROAM_GATES[sceneId].label;
   updateHUD();
